@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         //
 
-        //
+        //11
         btnDetermine = findViewById(R.id.btn_ok);
         editText = findViewById(R.id.ett_name);
         btnDetermine.setOnClickListener(new View.OnClickListener() {

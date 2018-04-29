@@ -47,13 +47,22 @@ public class MainActivity extends AppCompatActivity {
         Button btnAMap;
         EditText editText;
         public void AMap(){
-            AMapLocationClient mapLocationClient = null;
+            final AMapLocationClient mapLocationClient = new AMapLocationClient(getApplicationContext());
             AMapLocationListener mapLocationListener = new AMapLocationListener() {
                 @Override
                 public void onLocationChanged(AMapLocation aMapLocation) {
+                    String city =null;
                     if (aMapLocation != null){
                         if (aMapLocation.getErrorCode() == 0){
-                            Log.d("当前城市", aMapLocation.getCity());
+                            city = aMapLocation.getCity();
+                            Log.d("当前城市", city);
+
+                            editText.setText(city);
+                            if (editText.getText().toString().trim().equals(city)){
+                                Log.d("当前城市", "1111111");
+                                mapLocationClient.stopLocation();
+                                mapLocationClient.onDestroy();
+                            }
 
                         }else {
                             Log.d("123123", "定位失败"+aMapLocation.getErrorCode());
@@ -61,7 +70,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             };
-            mapLocationClient = new AMapLocationClient(getApplicationContext());
             mapLocationClient.setLocationListener(mapLocationListener);
             mapLocationClient.startLocation();
         }
@@ -86,10 +94,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 AMap();
+
             }
         });
-         //
-
+//
 
         btnDetermine.setOnClickListener(new View.OnClickListener() {
             @Override

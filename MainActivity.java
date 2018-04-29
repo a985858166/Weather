@@ -1,12 +1,17 @@
 package com.example.zhenying.weather;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.os.AsyncTask;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -14,6 +19,10 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
+
+import com.amap.api.location.AMapLocation;
+import com.amap.api.location.AMapLocationClient;
+import com.amap.api.location.AMapLocationListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -35,16 +44,53 @@ public class MainActivity extends AppCompatActivity {
         List<HoursWeather> data = new ArrayList<HoursWeather>();
         HoursWeatherAdapter hoursWeatherAdapter = new HoursWeatherAdapter(data);
         Button btnDetermine;
+        Button btnAMap;
         EditText editText;
+        public void AMap(){
+            AMapLocationClient mapLocationClient = null;
+            AMapLocationListener mapLocationListener = new AMapLocationListener() {
+                @Override
+                public void onLocationChanged(AMapLocation aMapLocation) {
+                    if (aMapLocation != null){
+                        if (aMapLocation.getErrorCode() == 0){
+                            Log.d("当前城市", aMapLocation.getCity());
+
+                        }else {
+                            Log.d("123123", "定位失败"+aMapLocation.getErrorCode());
+                        }
+                    }
+                }
+            };
+            mapLocationClient = new AMapLocationClient(getApplicationContext());
+            mapLocationClient.setLocationListener(mapLocationListener);
+            mapLocationClient.startLocation();
+        }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //
-
-        //11
         btnDetermine = findViewById(R.id.btn_ok);
         editText = findViewById(R.id.ett_name);
+        //
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                    MODE_ENABLE_WRITE_AHEAD_LOGGING);
+        }
+
+        //
+        btnAMap = findViewById(R.id.btn_AMap);
+        btnAMap.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AMap();
+            }
+        });
+         //
+
+
         btnDetermine.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -13,6 +15,8 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -39,40 +43,44 @@ import java.util.List;
 import javax.net.ssl.HttpsURLConnection;
 
 public class MainActivity extends AppCompatActivity {
-        RecyclerView recyclerView;
-        ProgressBar mProgressBar;
-        List<HoursWeather> data = new ArrayList<HoursWeather>();
-        HoursWeatherAdapter hoursWeatherAdapter = new HoursWeatherAdapter(data);
-        Button btnDetermine;
-        Button btnAMap;
-        EditText editText;
-        public void AMap(){
-            final AMapLocationClient mapLocationClient = new AMapLocationClient(getApplicationContext());
-            AMapLocationListener mapLocationListener = new AMapLocationListener() {
-                @Override
-                public void onLocationChanged(AMapLocation aMapLocation) {
-                    String city =null;
-                    if (aMapLocation != null){
-                        if (aMapLocation.getErrorCode() == 0){
-                            city = aMapLocation.getCity();
-                            Log.d("当前城市", city);
+    RecyclerView recyclerView;
+    ProgressBar mProgressBar;
+    List<HoursWeather> data = new ArrayList<HoursWeather>();
+    HoursWeatherAdapter hoursWeatherAdapter = new HoursWeatherAdapter(data);
+    Button btnDetermine;
+    Button btnAMap;
+    EditText editText;
 
-                            editText.setText(city);
-                            if (editText.getText().toString().trim().equals(city)){
-                                Log.d("当前城市", "1111111");
-                                mapLocationClient.stopLocation();
-                                mapLocationClient.onDestroy();
-                            }
 
-                        }else {
-                            Log.d("123123", "定位失败"+aMapLocation.getErrorCode());
+    public void AMap() {
+        final AMapLocationClient mapLocationClient = new AMapLocationClient(getApplicationContext());
+        AMapLocationListener mapLocationListener = new AMapLocationListener() {
+            @Override
+            public void onLocationChanged(AMapLocation aMapLocation) {
+                String district = null;
+                if (aMapLocation != null) {
+                    if (aMapLocation.getErrorCode() == 0) {
+                        district = aMapLocation.getDistrict();
+                        Log.d("当前地区", district);
+
+                        editText.setText(district);
+                        if (editText.getText().toString().trim().equals(district)) {
+                            mapLocationClient.stopLocation();
+                            mapLocationClient.onDestroy();
                         }
+
+                    } else {
+                        Log.d("123123", "定位失败" + aMapLocation.getErrorCode());
                     }
                 }
-            };
-            mapLocationClient.setLocationListener(mapLocationListener);
-            mapLocationClient.startLocation();
-        }
+            }
+        };
+        mapLocationClient.setLocationListener(mapLocationListener);
+        mapLocationClient.startLocation();
+        //
+
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,8 +91,8 @@ public class MainActivity extends AppCompatActivity {
         //
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
                     MODE_ENABLE_WRITE_AHEAD_LOGGING);
         }
 
@@ -102,19 +110,27 @@ public class MainActivity extends AppCompatActivity {
         btnDetermine.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                hoursWeatherAdapter.clear();
-                String url = "https://free-api.heweather.com/s6/weather/forecast?location="+editText.getText().toString().trim()+"&key=eddc14bbba8d4b238238eeb0698f46d0";
-                new MyAsycTask().execute(url);
+                if (editText.getText().toString().trim().equals("")){
+                    Toast.makeText(MainActivity.this, "地区名不能为空", Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
+                hoursWeatherAdapter.clear();
+                String url = "https://free-api.heweather.com/s6/weather/forecast?location=" + editText.getText().toString().trim() + "&key=eddc14bbba8d4b238238eeb0698f46d0";
+                new MyAsycTask().execute(url);
+                //
             }
         });
+        //
+
 
     }
-    class MyAsycTask extends AsyncTask<String,Void,List<HoursWeather>>{
+
+    class MyAsycTask extends AsyncTask<String, Void, List<HoursWeather>> {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            if (mProgressBar!=null)
+            if (mProgressBar != null)
                 mProgressBar.setVisibility(View.GONE);
             createProgressBar();
 
@@ -124,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(List<HoursWeather> hoursWeathers) {
             super.onPostExecute(hoursWeathers);
             data = hoursWeathers;
-            if (data != null){
+            if (data != null) {
                 mProgressBar.setVisibility(View.GONE);
                 recyclerView = findViewById(R.id.recycler_view_hours_weather);
                 LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
@@ -135,10 +151,9 @@ public class MainActivity extends AppCompatActivity {
 
 
                 data = null;
-                Toast.makeText(MainActivity.this,"天气信息已更新",Toast.LENGTH_SHORT).show();
-            }
-            else
-                Toast.makeText(MainActivity.this,"未找到该城市",Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "天气信息已更新", Toast.LENGTH_SHORT).show();
+            } else
+                Toast.makeText(MainActivity.this, "未找到该城市", Toast.LENGTH_SHORT).show();
         }
 
         @Override
@@ -166,23 +181,23 @@ public class MainActivity extends AppCompatActivity {
                 array = obj.getJSONArray("HeWeather6");
                 JSONObject object = array.getJSONObject(0);
                 String status = object.getString("status");
-                if (status.equals("ok")){
+                if (status.equals("ok")) {
                     JSONArray forcast = object.getJSONArray("daily_forecast");
                     for (int i = 0; i < forcast.length(); i++) {
                         JSONObject js = forcast.getJSONObject(i);
                         HoursWeather hw = new HoursWeather();
                         hw.setDate_d(js.getString("date"));
-                        hw.setImg_d(getResId("w"+js.getString("cond_code_d"),MainActivity.this));
+                        hw.setImg_d(getResId("w" + js.getString("cond_code_d"), MainActivity.this));
                         hw.setWeather_d(js.getString("cond_txt_d"));
-                        hw.setTemperature_d("最高气温："+js.getString("tmp_max")+"\n最低气温："+js.getString("tmp_min"));
+                        hw.setTemperature_d("最高气温：" + js.getString("tmp_max") + "\n最低气温：" + js.getString("tmp_min"));
                         //---
                         hw.setDate_n(js.getString("date"));
-                        hw.setImg_n(getResId("w"+js.getString("cond_code_n"),MainActivity.this));
+                        hw.setImg_n(getResId("w" + js.getString("cond_code_n"), MainActivity.this));
                         hw.setWeather_n(js.getString("cond_txt_n"));
-                        hw.setTemperature_n("最高气温："+js.getString("tmp_max")+"\n最低气温："+js.getString("tmp_min"));
+                        hw.setTemperature_n("最高气温：" + js.getString("tmp_max") + "\n最低气温：" + js.getString("tmp_min"));
                         data.add(hw);
                     }
-                }else {
+                } else {
                     return null;
                 }
                 //-----------------------------
@@ -196,25 +211,25 @@ public class MainActivity extends AppCompatActivity {
             return data;
         }
     }
+
     public int getResId(String name, Context context) {
         Resources r = context.getResources();
 
         int id = r.getIdentifier(name, "drawable", getBaseContext().getPackageName());
         return id;
     }
-    private void createProgressBar(){
+
+    private void createProgressBar() {
         //整个Activity布局的最终父布局,参见参考资料
-        FrameLayout rootFrameLayout=(FrameLayout) findViewById(android.R.id.content);
-        FrameLayout.LayoutParams layoutParams=
+        FrameLayout rootFrameLayout = (FrameLayout) findViewById(android.R.id.content);
+        FrameLayout.LayoutParams layoutParams =
                 new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
-        layoutParams.gravity= Gravity.CENTER;
-        mProgressBar=new ProgressBar(this);
+        layoutParams.gravity = Gravity.CENTER;
+        mProgressBar = new ProgressBar(this);
         mProgressBar.setLayoutParams(layoutParams);
         mProgressBar.setVisibility(View.VISIBLE);
         rootFrameLayout.addView(mProgressBar);
     }
-
-
 
 
 }

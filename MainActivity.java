@@ -2,6 +2,8 @@ package com.example.zhenying.weather;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.os.AsyncTask;
@@ -16,6 +18,8 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -50,7 +54,13 @@ public class MainActivity extends AppCompatActivity {
     Button btnDetermine;
     Button btnAMap;
     EditText editText;
+    boolean company = true;
 
+    @Override
+    protected void onResume() {
+        getSetting();
+        super.onResume();
+    }
 
     public void AMap() {
         final AMapLocationClient mapLocationClient = new AMapLocationClient(getApplicationContext());
@@ -89,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
         btnDetermine = findViewById(R.id.btn_ok);
         editText = findViewById(R.id.ett_name);
         //
+        //
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -124,6 +135,20 @@ public class MainActivity extends AppCompatActivity {
         //
 
 
+
+    }
+
+    private void getSetting() {
+        SharedPreferences pref = getSharedPreferences("com.example.zhenying.weather_preferences",MODE_PRIVATE);
+        String city_name = pref.getString("city_name","北京市");
+        String temp_unit = pref.getString("temp_unit","0");
+        if (temp_unit.equals("0")){
+            company = true;
+        }else {
+            company = false;
+        }
+        editText.setText(city_name);
+        btnDetermine.performClick();
     }
 
     class MyAsycTask extends AsyncTask<String, Void, List<HoursWeather>> {
@@ -189,12 +214,21 @@ public class MainActivity extends AppCompatActivity {
                         hw.setDate_d(js.getString("date"));
                         hw.setImg_d(getResId("w" + js.getString("cond_code_d"), MainActivity.this));
                         hw.setWeather_d(js.getString("cond_txt_d"));
-                        hw.setTemperature_d("最高气温：" + js.getString("tmp_max") + "\n最低气温：" + js.getString("tmp_min"));
+                        if (company){
+                            hw.setTemperature_d("最高气温：" + js.getString("tmp_max")+"℃"+ "\n最低气温：" + js.getString("tmp_min")+"℃");
+                            hw.setTemperature_n("最高气温：" + js.getString("tmp_max") +"℃"+ "\n最低气温：" + js.getString("tmp_min")+"℃");
+                        }else {
+                            int max = (Integer.parseInt(js.getString("tmp_max"))*9/5)+32;
+                            int min = (Integer.parseInt(js.getString("tmp_min"))*9/5)+32;
+                            hw.setTemperature_d("最高气温：" + max+"℉"+ "\n最低气温：" + min+"℉");
+                            hw.setTemperature_n("最高气温：" + max +"℉"+ "\n最低气温：" + min+"℉");
+                        }
+
                         //---
                         hw.setDate_n(js.getString("date"));
                         hw.setImg_n(getResId("w" + js.getString("cond_code_n"), MainActivity.this));
                         hw.setWeather_n(js.getString("cond_txt_n"));
-                        hw.setTemperature_n("最高气温：" + js.getString("tmp_max") + "\n最低气温：" + js.getString("tmp_min"));
+
                         data.add(hw);
                     }
                 } else {
@@ -231,5 +265,20 @@ public class MainActivity extends AppCompatActivity {
         rootFrameLayout.addView(mProgressBar);
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.setting,menu);
+        return super.onCreateOptionsMenu(menu);
+    }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id){
+            case R.id.menu_item_setting:
+                Intent intent = new Intent(MainActivity.this,SettingsActivity.class);
+                startActivity(intent);
+        }
+        return super.onOptionsItemSelected(item);
+    }
 }

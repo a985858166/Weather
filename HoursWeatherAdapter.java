@@ -36,11 +36,11 @@ public class HoursWeatherAdapter extends RecyclerView.Adapter<HoursWeatherAdapte
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         HoursWeather hoursWeather = mHoursWeatherList.get(position);
-        holder.date_d.setText(hoursWeather.getDate_d());
+        holder.date_d.setText(hoursWeather.getDate_d()+"-白");
         holder.weather_d.setText(hoursWeather.getWeather_d());
         holder.img_d.setImageResource(hoursWeather.getImg_d());
         holder.temperature_d.setText(hoursWeather.getTemperature_d());
-        holder.date_n.setText(hoursWeather.getDate_n());
+        holder.date_n.setText(hoursWeather.getDate_n()+"-晚");
         holder.weather_n.setText(hoursWeather.getWeather_n());
         holder.img_n.setImageResource(hoursWeather.getImg_n());
         holder.temperature_n.setText(hoursWeather.getTemperature_n());
